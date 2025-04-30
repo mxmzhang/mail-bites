@@ -11,13 +11,13 @@
     "512": "images/android-chrome-512x512.png"
   },
   "offline_enabled": true,
-  "permissions": ["storage", "activeTab", "contextMenus", "identity"],
+  "permissions": ["storage", "activeTab", "contextMenus", "identity", "sidePanel"],
   "host_permissions": [
     "https://mail.google.com/*",
     "https://*.googleusercontent.com/*"
   ],
   "oauth2": {
-    "client_id": "",
+    "client_id": "452625263136-ocu1epoi9jh36dib1jg0r780g7i3k1qk.apps.googleusercontent.com",
     "scopes": [
       "https://www.googleapis.com/auth/gmail.readonly",
       "https://www.googleapis.com/auth/gmail.labels"
@@ -27,7 +27,10 @@
     "service_worker": "background.js"
   },
   "action": {
-    "default_popup": "index.html"
+    "default_title": "Mail Bites"
+  },
+  "side_panel": {
+    "default_path": "index.html"
   },
   "content_scripts": [
     {

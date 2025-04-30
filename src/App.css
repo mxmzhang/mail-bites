@@ -1,24 +1,27 @@
 .App {
   width: 100%;
-  min-width: 400px;
-  max-width: 600px;
-  min-height: 500px;
+  min-width: 300px;
+  height: 100vh;
+  overflow-y: auto;
   font-family: -apple-system, BlinkMacSystemFont, 'Segoe UI', Roboto, Oxygen, Ubuntu, Cantarell, 'Open Sans', 'Helvetica Neue', sans-serif;
 }
 
 .App-header {
   background-color: #4285F4;
   color: white;
-  padding: 15px;
+  padding: 10px 15px;
   text-align: center;
   display: flex;
   justify-content: space-between;
   align-items: center;
+  position: sticky;
+  top: 0;
+  z-index: 100;
 }
 
 .App-header h1 {
   margin: 0;
-  font-size: 1.5rem;
+  font-size: 1.3rem;
   flex-grow: 1;
   text-align: center;
 }
@@ -56,7 +59,9 @@
 }
 
 .App-content {
-  padding: 16px;
+  padding: 12px;
+  height: calc(100vh - 43px); /* Subtract header height */
+  overflow-y: auto;
 }
 
 /* Error message */
@@ -120,6 +125,7 @@
   margin-top: 0;
   margin-bottom: 5px;
   color: #202124;
+  font-size: 1.1rem;
   display: flex;
   align-items: center;
   justify-content: space-between;
@@ -135,13 +141,13 @@
 .email-items {
   display: flex;
   flex-direction: column;
-  gap: 10px;
+  gap: 8px;
 }
 
 .email-item {
   border: 1px solid #e0e0e0;
   border-radius: 4px;
-  padding: 12px;
+  padding: 10px;
   cursor: pointer;
   transition: all 0.2s;
   position: relative;
@@ -228,7 +234,9 @@
 .email-detail {
   display: flex;
   flex-direction: column;
-  gap: 15px;
+  gap: 12px;
+  height: calc(100vh - 75px); /* Adjust for side panel */
+  overflow-y: auto;
 }
 
 .back-button {
@@ -263,8 +271,9 @@
   line-height: 1.5;
   color: #333;
   overflow-y: auto;
-  max-height: 300px;
+  max-height: none;
   word-break: break-word;
+  padding-bottom: 20px;
 }
 
 .email-actions {

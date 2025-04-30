@@ -17,6 +17,24 @@ chrome.runtime.onInstalled.addListener(() => {
     contexts: ["page"],
     documentUrlPatterns: ["https://mail.google.com/*"]
   });
+
+  // Set up side panel configuration
+  chrome.sidePanel.setOptions({
+    enabled: true,
+    path: "index.html"
+  });
+});
+
+// Handle extension icon click to open side panel
+chrome.action.onClicked.addListener((tab) => {
+  if (tab.url.includes("mail.google.com")) {
+    chrome.sidePanel.open({ tabId: tab.id });
+  } else {
+    // If not on Gmail, notify the user
+    console.log("Mail Bites works best on Gmail");
+    // Optionally open the side panel anyway
+    chrome.sidePanel.open({ tabId: tab.id });
+  }
 });
 
 // Handle direct authentication
@@ -34,7 +52,7 @@ function authenticateWithGmail(callback) {
 }
 
 // Gmail/Gemini config (Gemini calls are currently bypassed with test scores)
-const GEMINI_API_KEY = '';
+const GEMINI_API_KEY = 'AIzaSyA6GtIAPXGVv8bBR4ifRSTDtpoAKFG2_Vg';
 const GEMINI_API_URL = 'https://generativelanguage.googleapis.com/v1beta/models/gemini-2.0-flash:generateContent';
 
 // Base64 decoder for email bodies
