@@ -52,7 +52,7 @@ function authenticateWithGmail(callback) {
 }
 
 // Gmail/Gemini config (Gemini calls are currently bypassed with test scores)
-const GEMINI_API_KEY = 'AIzaSyA6GtIAPXGVv8bBR4ifRSTDtpoAKFG2_Vg';
+const GEMINI_API_KEY = 'YOUR_API_KEY';
 const GEMINI_API_URL = 'https://generativelanguage.googleapis.com/v1beta/models/gemini-2.0-flash:generateContent';
 
 // Base64 decoder for email bodies
