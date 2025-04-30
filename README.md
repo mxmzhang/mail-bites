@@ -7,9 +7,10 @@ A Chrome extension that integrates with Gmail to provide quick insights and summ
 - Authenticate with Gmail API to access your emails
 - View a list of recent emails
 - Read email content in a clean interface
-- Coming soon: Email summaries and key point extraction
+- Coming soon: Email summaries and To-Do lists
 
 ## Setup
+Note that to run this extension before this is published on Chrome Web Store, you need to repeat the set up process individually to successfully launch this extension. At the end of the setup, you also need to add the testing gmail in the Audience tab in Google Cloud Project.
 
 ### 1. Create a Google Cloud Project
 
