@@ -11,7 +11,7 @@
     "512": "images/android-chrome-512x512.png"
   },
   "offline_enabled": true,
-  "permissions": ["storage", "activeTab", "contextMenus", "identity"],
+  "permissions": ["storage", "activeTab", "contextMenus", "identity", "sidePanel"],
   "host_permissions": [
     "https://mail.google.com/*",
     "https://*.googleusercontent.com/*"
@@ -27,7 +27,10 @@
     "service_worker": "background.js"
   },
   "action": {
-    "default_popup": "index.html"
+    "default_title": "Mail Bites"
+  },
+  "side_panel": {
+    "default_path": "index.html"
   },
   "content_scripts": [
     {

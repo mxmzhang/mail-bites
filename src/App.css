@@ -1,29 +1,38 @@
 .App {
   width: 100%;
-  min-width: 400px;
-  max-width: 600px;
-  min-height: 500px;
+  min-width: 300px;
+  height: 100vh;
+  overflow-y: auto;
   font-family: -apple-system, BlinkMacSystemFont, 'Segoe UI', Roboto, Oxygen, Ubuntu, Cantarell, 'Open Sans', 'Helvetica Neue', sans-serif;
 }
 
 .App-header {
   background-color: #4285F4;
   color: white;
-  padding: 15px;
+  padding: 10px 15px;
   text-align: center;
   display: flex;
   justify-content: space-between;
   align-items: center;
+  position: sticky;
+  top: 0;
+  z-index: 100;
 }
 
 .App-header h1 {
   margin: 0;
-  font-size: 1.5rem;
+  font-size: 1.3rem;
   flex-grow: 1;
   text-align: center;
 }
 
-.refresh-button {
+.header-buttons {
+  display: flex;
+  gap: 10px;
+}
+
+.refresh-button,
+.sort-button {
   background: none;
   border: none;
   color: white;
@@ -32,20 +41,27 @@
   padding: 5px 10px;
   border-radius: 4px;
   transition: background-color 0.2s;
-  margin-left: auto;
 }
 
-.refresh-button:hover {
+.refresh-button:hover,
+.sort-button:hover {
   background-color: rgba(255, 255, 255, 0.2);
 }
 
-.refresh-button:disabled {
+.refresh-button:disabled,
+.sort-button:disabled {
   opacity: 0.5;
   cursor: not-allowed;
 }
 
+.sort-button {
+  background-color: rgba(255, 255, 255, 0.1);
+}
+
 .App-content {
-  padding: 16px;
+  padding: 12px;
+  height: calc(100vh - 43px); /* Subtract header height */
+  overflow-y: auto;
 }
 
 /* Error message */
@@ -109,6 +125,7 @@
   margin-top: 0;
   margin-bottom: 5px;
   color: #202124;
+  font-size: 1.1rem;
   display: flex;
   align-items: center;
   justify-content: space-between;
@@ -124,13 +141,13 @@
 .email-items {
   display: flex;
   flex-direction: column;
-  gap: 10px;
+  gap: 8px;
 }
 
 .email-item {
   border: 1px solid #e0e0e0;
   border-radius: 4px;
-  padding: 12px;
+  padding: 10px;
   cursor: pointer;
   transition: all 0.2s;
   position: relative;
@@ -147,6 +164,11 @@
   border-left: 3px solid #4285F4;
 }
 
+.email-item.unread.chronological-sort {
+  background-color: #f2f6fc;
+  border-left: 4px solid #9e9e9e;
+}
+
 .email-item.unread .email-sender,
 .email-item.unread .email-subject {
   font-weight: 600;
@@ -158,8 +180,16 @@
   border-left: 3px solid #f9a825;
 }
 
+.email-item.important.chronological-sort {
+  border-left: 4px solid #9e9e9e;
+}
+
 .email-item.important.unread {
   border-left: 3px solid #f44336;
+}
+
+.email-item.important.unread.chronological-sort {
+  border-left: 4px solid #9e9e9e;
 }
 
 .email-sender {
@@ -189,6 +219,11 @@
   text-align: right;
 }
 
+.email-date.full-width {
+  width: 100%;
+  text-align: right;
+}
+
 .loading, .no-emails {
   padding: 20px;
   text-align: center;
@@ -199,7 +234,9 @@
 .email-detail {
   display: flex;
   flex-direction: column;
-  gap: 15px;
+  gap: 12px;
+  height: calc(100vh - 75px); /* Adjust for side panel */
+  overflow-y: auto;
 }
 
 .back-button {
@@ -234,8 +271,9 @@
   line-height: 1.5;
   color: #333;
   overflow-y: auto;
-  max-height: 300px;
+  max-height: none;
   word-break: break-word;
+  padding-bottom: 20px;
 }
 
 .email-actions {
@@ -256,4 +294,115 @@
 
 .action-button:hover {
   background-color: #e0e0e0;
+}
+
+.email-priority {
+  margin-top: 5px;
+  color: #333;
+  font-size: 0.95rem;
+}
+
+.suggested-response {
+  color: #4285F4;
+  font-weight: 500;
+}
+
+.email-priority-reasoning {
+  margin-top: 8px;
+  color: #555;
+  font-size: 0.9rem;
+  line-height: 1.4;
+  padding: 8px;
+  background-color: #f8f9fa;
+  border-radius: 4px;
+  border-left: 3px solid #4285F4;
+}
+
+/* Priority level colors */
+.email-item.priority-10 {
+  border-left: 4px solid #ff4444;
+}
+
+.email-item.priority-9 {
+  border-left: 4px solid #ff6b6b;
+}
+
+.email-item.priority-8 {
+  border-left: 4px solid #ff8e8e;
+}
+
+.email-item.priority-7 {
+  border-left: 4px solid #ffb3b3;
+}
+
+.email-item.priority-6 {
+  border-left: 4px solid #ffd8d8;
+}
+
+.email-item.priority-5 {
+  border-left: 4px solid #e0e0e0;
+}
+
+.email-item.priority-4 {
+  border-left: 4px solid #d8e0ff;
+}
+
+.email-item.priority-3 {
+  border-left: 4px solid #b3c6ff;
+}
+
+.email-item.priority-2 {
+  border-left: 4px solid #8eabff;
+}
+
+.email-item.priority-1 {
+  border-left: 4px solid #6b8eff;
+}
+
+.email-item.chronological-sort {
+  border-left: 4px solid #e0e0e0;
+}
+
+.email-header-row {
+  display: flex;
+  justify-content: space-between;
+  align-items: center;
+  margin-bottom: 8px;
+}
+
+.email-priority-badge {
+  background-color: #f8f9fa;
+  border: 1px solid #e9ecef;
+  border-radius: 12px;
+  padding: 2px 8px;
+  font-size: 0.85rem;
+  font-weight: 600;
+  color: #495057;
+}
+
+.email-item.priority-10 .email-priority-badge {
+  background-color: #fff5f5;
+  border-color: #ff4444;
+  color: #ff4444;
+}
+
+.email-item.priority-9 .email-priority-badge,
+.email-item.priority-8 .email-priority-badge {
+  background-color: #fff8f8;
+  border-color: #ff8e8e;
+  color: #ff8e8e;
+}
+
+.email-item.priority-7 .email-priority-badge,
+.email-item.priority-6 .email-priority-badge {
+  background-color: #fff9f9;
+  border-color: #ffb3b3;
+  color: #ffb3b3;
+}
+
+.response-time {
+  font-size: 0.85rem;
+  color: #666;
+  margin-top: 8px;
+  font-style: italic;
 }
