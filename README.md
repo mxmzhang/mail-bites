@@ -1,13 +1,14 @@
 # Mail Bites - Gmail Chrome Extension
 
-A Chrome extension that integrates with Gmail to provide quick insights and summaries of your emails.
+Summarize unread emails in your inbox and generate a summary and a to-do list and works for Gmail. It will also highlight key action items, dates, and deadlines, prioritize emails by time-sensitive content, and assist with drafting replies using Large Language Models.
 
 ## Features
 
 - Authenticate with Gmail API to access your emails
 - View a list of recent emails
-- Read email content in a clean interface
-- Coming soon: Email summaries and To-Do lists
+- Sort emails by priority ratings given by LLM
+- Email summaries
+- Automatic To-Do lists 
 
 ## Setup
 Note that to run this extension before this is published on Chrome Web Store, you need to repeat the set up process individually to successfully launch this extension. At the end of the setup, you also need to add the testing gmail in the Audience tab in Google Cloud Project.
@@ -30,11 +31,13 @@ Note that to run this extension before this is published on Chrome Web Store, yo
 6. Add `https://mail.google.com/` to the JavaScript origins
 7. Click "Create"
 8. Note your Client ID - you'll need it in the next step
+9. Go to "Audience" and add your email in Test users
 
 ### 3. Update the Extension Manifest
 
 1. Open `public/manifest.json`
 2. Replace `YOUR_CLIENT_ID.apps.googleusercontent.com` with your actual client ID from the previous step
+3. Replace `GEMINI_API_KEY` in `background.js` with your API key
 
 ### 4. Install Dependencies and Build the Extension
 
