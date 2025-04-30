@@ -187,6 +187,7 @@ function App() {
   const [error, setError] = useState<string | null>(null);
   const [unreadCount, setUnreadCount] = useState<number>(0);
   const [totalCount, setTotalCount] = useState<number>(0);
+  const [token, setToken] = useState<string| null>(null);
 
   // Check authentication status on component mount
   useEffect(() => {
@@ -218,6 +219,7 @@ function App() {
         // Check the response from background script
         if (response?.token) {
           setAuthenticated(true);
+          setToken(response.token);
           fetchEmails(response.token);
         } else if (response?.error) {
           console.error('Authentication error:', response.error);
@@ -300,13 +302,18 @@ function App() {
   };
 
   // Refresh emails
+  // const handleRefresh = () => {
+  //   if (authenticated) {
+  //     chrome.runtime.sendMessage({ action: 'authenticate' }, (response) => {
+  //       if (response?.token) {
+  //         fetchEmails(response.token);
+  //       }
+  //     });
+  //   }
+  // };
   const handleRefresh = () => {
-    if (authenticated) {
-      chrome.runtime.sendMessage({ action: 'authenticate' }, (response) => {
-        if (response?.token) {
-          fetchEmails(response.token);
-        }
-      });
+    if (token) {
+      fetchEmails(token);
     }
   };
 
@@ -340,7 +347,7 @@ function App() {
           />
         ) : (
           <EmailList 
-            emails={emails} 
+            emails={emails.sort((a, b) => (b.priorityScore || 5) - (a.priorityScore || 5))} 
             onSelectEmail={handleSelectEmail} 
             loading={loading}
             unreadCount={unreadCount}
