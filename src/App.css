@@ -257,3 +257,114 @@
 .action-button:hover {
   background-color: #e0e0e0;
 }
+
+.email-priority {
+  display: flex;
+  justify-content: space-between;
+  margin-bottom: 8px;
+  font-size: 0.9em;
+}
+
+.priority-score {
+  font-weight: bold;
+  padding: 2px 6px;
+  border-radius: 4px;
+  background-color: rgba(0, 0, 0, 0.05);
+}
+
+.response-time {
+  color: #666;
+  font-style: italic;
+}
+
+.priority-reasoning {
+  font-size: 0.85em;
+  color: #666;
+  margin-top: 4px;
+  font-style: italic;
+}
+
+/* Priority level colors */
+.email-item.priority-10 {
+  border-left: 4px solid #ff4444;
+}
+
+.email-item.priority-9 {
+  border-left: 4px solid #ff6b6b;
+}
+
+.email-item.priority-8 {
+  border-left: 4px solid #ff8e8e;
+}
+
+.email-item.priority-7 {
+  border-left: 4px solid #ffb3b3;
+}
+
+.email-item.priority-6 {
+  border-left: 4px solid #ffd8d8;
+}
+
+.email-item.priority-5 {
+  border-left: 4px solid #e0e0e0;
+}
+
+.email-item.priority-4 {
+  border-left: 4px solid #d8e0ff;
+}
+
+.email-item.priority-3 {
+  border-left: 4px solid #b3c6ff;
+}
+
+.email-item.priority-2 {
+  border-left: 4px solid #8eabff;
+}
+
+.email-item.priority-1 {
+  border-left: 4px solid #6b8eff;
+}
+
+.email-header-row {
+  display: flex;
+  justify-content: space-between;
+  align-items: center;
+  margin-bottom: 8px;
+}
+
+.email-priority-badge {
+  background-color: #f8f9fa;
+  border: 1px solid #e9ecef;
+  border-radius: 12px;
+  padding: 2px 8px;
+  font-size: 0.85rem;
+  font-weight: 600;
+  color: #495057;
+}
+
+.email-item.priority-10 .email-priority-badge {
+  background-color: #fff5f5;
+  border-color: #ff4444;
+  color: #ff4444;
+}
+
+.email-item.priority-9 .email-priority-badge,
+.email-item.priority-8 .email-priority-badge {
+  background-color: #fff8f8;
+  border-color: #ff8e8e;
+  color: #ff8e8e;
+}
+
+.email-item.priority-7 .email-priority-badge,
+.email-item.priority-6 .email-priority-badge {
+  background-color: #fff9f9;
+  border-color: #ffb3b3;
+  color: #ffb3b3;
+}
+
+.response-time {
+  font-size: 0.85rem;
+  color: #666;
+  margin-top: 8px;
+  font-style: italic;
+}

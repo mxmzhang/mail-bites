@@ -13,6 +13,10 @@ interface Email {
   isImportant?: boolean;
   isPrimary?: boolean;
   isRecent?: boolean;
+  inboxType?: string;
+  priorityScore?: number;
+  priorityReasoning?: string;
+  suggestedResponseTime?: string;
 }
 
 interface EmailListProps {
@@ -20,6 +24,7 @@ interface EmailListProps {
   onSelectEmail: (email: Email) => void;
   loading: boolean;
   unreadCount: number;
+  totalCount?: number;
 }
 
 interface EmailDetailProps {
@@ -65,7 +70,7 @@ const formatDate = (dateString: string): string => {
 };
 
 // EmailList component
-const EmailList: React.FC<EmailListProps> = ({ emails, onSelectEmail, loading, unreadCount }) => (
+const EmailList: React.FC<EmailListProps> = ({ emails, onSelectEmail, loading, unreadCount, totalCount }) => (
   <div>
     {loading ? (
       <div className="loading">Loading unread emails...</div>
@@ -74,18 +79,35 @@ const EmailList: React.FC<EmailListProps> = ({ emails, onSelectEmail, loading, u
     ) : (
       <div className="email-list">
         <h2>Primary Unread Emails ({unreadCount})</h2>
-        <div className="email-subtitle">From the last 24 hours</div>
+        <div className="email-subtitle">
+          From the last 24 hours
+          {totalCount && totalCount > unreadCount && (
+            <span className="filter-info">
+              (Filtered {totalCount - unreadCount} non-Primary emails)
+            </span>
+          )}
+        </div>
         <div className="email-items">
           {emails.map((email) => (
             <div 
               key={email.id}
-              className={`email-item ${email.isUnread ? 'unread' : ''} ${email.isImportant ? 'important' : ''}`}
+              className={`email-item ${email.isUnread ? 'unread' : ''} ${email.isImportant ? 'important' : ''} priority-${Math.ceil(email.priorityScore || 5)}`}
               onClick={() => onSelectEmail(email)}
             >
+              <div className="email-header-row">
+                <div className="email-priority-badge">
+                  Priority: {email.priorityScore || '-'}/10
+                </div>
+                <div className="email-date">{formatDate(email.date)}</div>
+              </div>
               <div className="email-sender">{extractName(email.from)}</div>
               <div className="email-subject">{email.subject}</div>
               <div className="email-snippet">{email.snippet}</div>
-              <div className="email-date">{formatDate(email.date)}</div>
+              {email.suggestedResponseTime && (
+                <div className="response-time">
+                  Respond {email.suggestedResponseTime}
+                </div>
+              )}
             </div>
           ))}
         </div>
@@ -122,6 +144,11 @@ const EmailDetail: React.FC<EmailDetailProps> = ({ email, onBack, onMarkAsRead }
           <div className="email-date">
             <strong>Date:</strong> {formatDate(email.date)}
           </div>
+          {email.inboxType && (
+            <div className="email-inbox-type">
+              <strong>Category:</strong> {email.inboxType}
+            </div>
+          )}
         </div>
       </div>
       <div className="email-body">
@@ -159,6 +186,7 @@ function App() {
   const [loading, setLoading] = useState<boolean>(false);
   const [error, setError] = useState<string | null>(null);
   const [unreadCount, setUnreadCount] = useState<number>(0);
+  const [totalCount, setTotalCount] = useState<number>(0);
 
   // Check authentication status on component mount
   useEffect(() => {
@@ -229,6 +257,7 @@ function App() {
         if (response?.emails) {
           setEmails(response.emails);
           setUnreadCount(response.unreadCount || response.emails.length);
+          setTotalCount(response.totalCount || response.emails.length);
           setLoading(false);
         } else if (response?.error) {
           console.error('Error fetching emails:', response.error);
@@ -315,6 +344,7 @@ function App() {
             onSelectEmail={handleSelectEmail} 
             loading={loading}
             unreadCount={unreadCount}
+            totalCount={totalCount}
           />
         )}
       </main>
