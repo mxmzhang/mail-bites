@@ -34,7 +34,7 @@ function authenticateWithGmail(callback) {
 }
 
 // Gmail/Gemini config (Gemini calls are currently bypassed with test scores)
-const GEMINI_API_KEY = 'YOUR_API_KEY_HERE';
+const GEMINI_API_KEY = '';
 const GEMINI_API_URL = 'https://generativelanguage.googleapis.com/v1beta/models/gemini-2.0-flash:generateContent';
 
 // Base64 decoder for email bodies
@@ -160,19 +160,38 @@ async function fetchEmails(token, callback) {
     const primary = processed;
     console.log(`After filtering to Primary: ${primary.length}`);
 
-    // 5) Assign test priority scores (or call your Gemini logic)
-    const scored = primary.map((email, i) => {
-      const score = 10 - (i % 10);
-      return {
-        ...email,
-        priorityScore: score,
-        priorityReasoning: `Test priority score ${score}`,
-        suggestedResponseTime:
-          score > 7 ? 'immediate' :
-          score > 5 ? 'within 1 hour' :
-          score > 3 ? 'within 4 hours' : 'within 24 hours'
-      };
-    });
+    // 5) Use Gemini API to analyze and score emails
+    console.log('Analyzing emails with Gemini AI...');
+    
+    // Process emails in batches to avoid rate limiting
+    const batchSize = 5; // Process 5 emails at a time to avoid overwhelming the API
+    const scored = [];
+    
+    for (let i = 0; i < primary.length; i += batchSize) {
+      const batch = primary.slice(i, i + batchSize);
+      console.log(`Processing batch ${Math.floor(i/batchSize) + 1}/${Math.ceil(primary.length/batchSize)} (${batch.length} emails)`);
+      
+      // Process each batch with a small delay between emails
+      const batchResults = await Promise.all(
+        batch.map(async (email, index) => {
+          // Add a small delay between requests to avoid rate limiting
+          if (index > 0) {
+            await new Promise(resolve => setTimeout(resolve, 500)); // 500ms delay between requests
+          }
+          return await analyzeEmailContent(email);
+        })
+      );
+      
+      scored.push(...batchResults);
+      
+      // Add a delay between batches
+      if (i + batchSize < primary.length) {
+        console.log('Pausing between batches to avoid rate limiting...');
+        await new Promise(resolve => setTimeout(resolve, 2000)); // 2 second delay between batches
+      }
+    }
+    
+    console.log('Analysis complete for all emails:', scored.length);
 
     // 6) Send back to popup
     callback({
@@ -184,6 +203,182 @@ async function fetchEmails(token, callback) {
   } catch (error) {
     console.error('Error in fetchEmails:', error);
     callback({ error: error.message });
+  }
+}
+
+// Analyze email content using Gemini API
+async function analyzeEmailContent(email) {
+  console.log('Analyzing email:', email.subject);
+  try {
+    const prompt = `You are an email priority analyzer. Analyze the email below and determine its priority level.
+
+Email details:
+- Subject: ${email.subject}
+- From: ${email.from}
+- Date: ${email.date}
+- Content: ${email.body || email.snippet}
+
+Based on the email, consider these factors:
+1. Urgency: Does this require immediate attention?
+2. Sender importance: Is this from someone significant?
+3. Time sensitivity: Are there deadlines involved?
+4. Impact: What happens if this isn't addressed?
+5. Personal relevance: How relevant is this to the recipient's responsibilities?
+
+IMPORTANT: Your response must be a valid JSON object with the following format and nothing else:
+{
+  "priorityScore": [a number between 1 and 10],
+  "reasoning": "[brief explanation for the score]",
+  "suggestedResponseTime": "[one of: immediate, within 1 hour, within 4 hours, within 24 hours]"
+}
+
+Scoring guidelines:
+- 9-10: Critical priority (emergencies, CEO requests)
+- 7-8: High priority (client issues, urgent requests)
+- 5-6: Medium priority (standard work items)
+- 3-4: Low priority (FYI messages, updates)
+- 1-2: Minimal priority (newsletters, non-urgent)`;
+
+    console.log('Sending request to Gemini API...');
+    
+    const requestBody = {
+      contents: [{
+        parts: [{
+          text: prompt
+        }]
+      }],
+      generationConfig: {
+        temperature: 0.2,  // Lower temperature for more predictable formatting
+        maxOutputTokens: 1024
+      }
+    };
+
+    const response = await fetch(`${GEMINI_API_URL}?key=${GEMINI_API_KEY}`, {
+      method: 'POST',
+      headers: {
+        'Content-Type': 'application/json',
+      },
+      body: JSON.stringify(requestBody)
+    });
+
+    if (!response.ok) {
+      const errorText = await response.text();
+      console.error('Gemini API error:', errorText);
+      throw new Error(`Gemini API error: ${response.status}`);
+    }
+
+    const data = await response.json();
+    console.log('Gemini API response:', data);
+
+    // Extract the text response and parse the JSON from it
+    const analysisText = data.candidates[0].content.parts[0].text;
+    console.log('Analysis text:', analysisText);
+    
+    try {
+      // Clean up the response text to ensure valid JSON
+      let cleanText = analysisText.trim();
+      
+      // Remove any markdown code block indicators
+      cleanText = cleanText.replace(/```json|```/g, '').trim();
+      
+      // Ensure we're only parsing the JSON object portion
+      const jsonStart = cleanText.indexOf('{');
+      const jsonEnd = cleanText.lastIndexOf('}') + 1;
+      
+      if (jsonStart >= 0 && jsonEnd > jsonStart) {
+        cleanText = cleanText.substring(jsonStart, jsonEnd);
+      }
+      
+      const analysis = JSON.parse(cleanText);
+      console.log('Parsed analysis:', analysis);
+      
+      return {
+        ...email,
+        priorityScore: analysis.priorityScore,
+        priorityReasoning: analysis.reasoning,
+        suggestedResponseTime: analysis.suggestedResponseTime
+      };
+    } catch (jsonError) {
+      console.error('Failed to parse JSON from Gemini response:', jsonError);
+      console.log('Raw response text:', analysisText);
+      
+      // More robust fallback extraction using regex
+      let priorityScore = 5; // Default
+      let reasoning = "Could not extract reasoning";
+      let responseTime = "within 24 hours";
+      
+      // Extract priority score - look for any number between 1-10
+      const priorityMatch = analysisText.match(/priorityScore["'\s]*:["'\s]*(\d+)/i) || 
+                           analysisText.match(/priority["'\s]*:["'\s]*(\d+)/i) ||
+                           analysisText.match(/priority score["'\s]*:["'\s]*(\d+)/i) ||
+                           analysisText.match(/\b([1-9]|10)\b/);
+      
+      if (priorityMatch) {
+        const extractedScore = parseInt(priorityMatch[1]);
+        if (extractedScore >= 1 && extractedScore <= 10) {
+          priorityScore = extractedScore;
+        }
+      }
+      
+      // Extract reasoning - look for explanatory text
+      const reasoningMatch = analysisText.match(/reasoning["'\s]*:["'\s]*["']([^"']+)["']/i) ||
+                            analysisText.match(/reasoning["'\s]*:["'\s]*([^,"'\n]+)/i);
+      
+      if (reasoningMatch) {
+        reasoning = reasoningMatch[1].trim();
+      } else {
+        // If no reasoning found, try to extract any explanatory sentence
+        const sentences = analysisText.split(/[.!?]\s+/);
+        if (sentences.length > 1) {
+          reasoning = sentences.find(s => 
+            s.length > 20 && 
+            !s.includes("priority") && 
+            !s.includes("score")
+          ) || reasoning;
+        }
+      }
+      
+      // Extract response time
+      const timePatterns = [
+        /immediate/i,
+        /within 1 hour/i,
+        /within (\d+) hour/i,
+        /within (\d+) day/i
+      ];
+      
+      for (const pattern of timePatterns) {
+        const match = analysisText.match(pattern);
+        if (match) {
+          if (pattern.source.includes("immediate")) {
+            responseTime = "immediate";
+          } else if (pattern.source.includes("1 hour")) {
+            responseTime = "within 1 hour";
+          } else if (pattern.source.includes("hour")) {
+            const hours = parseInt(match[1]);
+            responseTime = hours <= 4 ? "within 4 hours" : "within 24 hours";
+          } else if (pattern.source.includes("day")) {
+            responseTime = "within 24 hours";
+          }
+          break;
+        }
+      }
+      
+      return {
+        ...email,
+        priorityScore: priorityScore,
+        priorityReasoning: reasoning,
+        suggestedResponseTime: responseTime
+      };
+    }
+  } catch (error) {
+    console.error('Error analyzing email with Gemini:', error);
+    // Fallback to a default score if analysis fails
+    return {
+      ...email,
+      priorityScore: 5,
+      priorityReasoning: `Analysis failed: ${error.message}`,
+      suggestedResponseTime: 'within 24 hours'
+    };
   }
 }
 

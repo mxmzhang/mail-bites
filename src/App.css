@@ -23,7 +23,13 @@
   text-align: center;
 }
 
-.refresh-button {
+.header-buttons {
+  display: flex;
+  gap: 10px;
+}
+
+.refresh-button,
+.sort-button {
   background: none;
   border: none;
   color: white;
@@ -32,16 +38,21 @@
   padding: 5px 10px;
   border-radius: 4px;
   transition: background-color 0.2s;
-  margin-left: auto;
 }
 
-.refresh-button:hover {
+.refresh-button:hover,
+.sort-button:hover {
   background-color: rgba(255, 255, 255, 0.2);
 }
 
-.refresh-button:disabled {
+.refresh-button:disabled,
+.sort-button:disabled {
   opacity: 0.5;
   cursor: not-allowed;
+}
+
+.sort-button {
+  background-color: rgba(255, 255, 255, 0.1);
 }
 
 .App-content {
@@ -147,6 +158,11 @@
   border-left: 3px solid #4285F4;
 }
 
+.email-item.unread.chronological-sort {
+  background-color: #f2f6fc;
+  border-left: 4px solid #9e9e9e;
+}
+
 .email-item.unread .email-sender,
 .email-item.unread .email-subject {
   font-weight: 600;
@@ -158,8 +174,16 @@
   border-left: 3px solid #f9a825;
 }
 
+.email-item.important.chronological-sort {
+  border-left: 4px solid #9e9e9e;
+}
+
 .email-item.important.unread {
   border-left: 3px solid #f44336;
+}
+
+.email-item.important.unread.chronological-sort {
+  border-left: 4px solid #9e9e9e;
 }
 
 .email-sender {
@@ -186,6 +210,11 @@
 .email-date {
   font-size: 0.8rem;
   color: #888;
+  text-align: right;
+}
+
+.email-date.full-width {
+  width: 100%;
   text-align: right;
 }
 
@@ -259,29 +288,25 @@
 }
 
 .email-priority {
-  display: flex;
-  justify-content: space-between;
-  margin-bottom: 8px;
-  font-size: 0.9em;
+  margin-top: 5px;
+  color: #333;
+  font-size: 0.95rem;
 }
 
-.priority-score {
-  font-weight: bold;
-  padding: 2px 6px;
+.suggested-response {
+  color: #4285F4;
+  font-weight: 500;
+}
+
+.email-priority-reasoning {
+  margin-top: 8px;
+  color: #555;
+  font-size: 0.9rem;
+  line-height: 1.4;
+  padding: 8px;
+  background-color: #f8f9fa;
   border-radius: 4px;
-  background-color: rgba(0, 0, 0, 0.05);
-}
-
-.response-time {
-  color: #666;
-  font-style: italic;
-}
-
-.priority-reasoning {
-  font-size: 0.85em;
-  color: #666;
-  margin-top: 4px;
-  font-style: italic;
+  border-left: 3px solid #4285F4;
 }
 
 /* Priority level colors */
@@ -324,6 +349,11 @@
 .email-item.priority-1 {
   border-left: 4px solid #6b8eff;
 }
+
+.email-item.chronological-sort {
+  border-left: 4px solid #e0e0e0;
+}
+
 .email-header-row {
   display: flex;
   justify-content: space-between;

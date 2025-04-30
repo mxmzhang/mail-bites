@@ -7,6 +7,7 @@ interface Email {
   from: string;
   to?: string;
   date: string;
+  receivedDate?: string;
   snippet: string;
   body?: string;
   isUnread: boolean;
@@ -25,6 +26,7 @@ interface EmailListProps {
   loading: boolean;
   unreadCount: number;
   totalCount?: number;
+  sortByPriority: boolean;
 }
 
 interface EmailDetailProps {
@@ -51,70 +53,75 @@ const formatDate = (dateString: string): string => {
   try {
     const date = new Date(dateString);
     const now = new Date();
+    const timeFormat = { hour: '2-digit', minute: '2-digit' } as const;
     
     // Today
     if (date.toDateString() === now.toDateString()) {
-      return date.toLocaleTimeString([], { hour: '2-digit', minute: '2-digit' });
+      return date.toLocaleTimeString([], timeFormat);
     }
     
     // This year
     if (date.getFullYear() === now.getFullYear()) {
-      return date.toLocaleDateString([], { month: 'short', day: 'numeric' });
+      return `${date.toLocaleDateString([], { month: 'short', day: 'numeric' })} ${date.toLocaleTimeString([], timeFormat)}`;
     }
     
     // Different year
-    return date.toLocaleDateString([], { year: 'numeric', month: 'short', day: 'numeric' });
+    return `${date.toLocaleDateString([], { year: 'numeric', month: 'short', day: 'numeric' })} ${date.toLocaleTimeString([], timeFormat)}`;
   } catch (error) {
     return dateString;
   }
 };
 
 // EmailList component
-const EmailList: React.FC<EmailListProps> = ({ emails, onSelectEmail, loading, unreadCount, totalCount }) => (
-  <div>
-    {loading ? (
-      <div className="loading">Loading unread emails...</div>
-    ) : emails.length === 0 ? (
-      <div className="no-emails">No unread emails in Primary inbox in the last 24 hours</div>
-    ) : (
-      <div className="email-list">
-        <h2>Primary Unread Emails ({unreadCount})</h2>
-        <div className="email-subtitle">
-          From the last 24 hours
-          {totalCount && totalCount > unreadCount && (
-            <span className="filter-info">
-              (Filtered {totalCount - unreadCount} non-Primary emails)
-            </span>
-          )}
-        </div>
-        <div className="email-items">
-          {emails.map((email) => (
-            <div 
-              key={email.id}
-              className={`email-item ${email.isUnread ? 'unread' : ''} ${email.isImportant ? 'important' : ''} priority-${Math.ceil(email.priorityScore || 5)}`}
-              onClick={() => onSelectEmail(email)}
-            >
-              <div className="email-header-row">
-                <div className="email-priority-badge">
-                  Priority: {email.priorityScore || '-'}/10
+const EmailList: React.FC<EmailListProps> = ({ emails, onSelectEmail, loading, unreadCount, totalCount, sortByPriority }) => {
+  return (
+    <div>
+      {loading ? (
+        <div className="loading">Loading unread emails...</div>
+      ) : emails.length === 0 ? (
+        <div className="no-emails">No unread emails in Primary inbox in the last 24 hours</div>
+      ) : (
+        <div className="email-list">
+          <h2>Primary Unread Emails ({unreadCount})</h2>
+          <div className="email-subtitle">
+            From the last 24 hours
+            {totalCount && totalCount > unreadCount && (
+              <span className="filter-info">
+                (Filtered {totalCount - unreadCount} non-Primary emails)
+              </span>
+            )}
+          </div>
+          <div className="email-items">
+            {emails.map((email) => (
+              <div 
+                key={email.id}
+                className={`email-item ${email.isUnread ? 'unread' : ''} ${email.isImportant ? 'important' : ''} ${sortByPriority ? `priority-${Math.ceil(email.priorityScore || 5)}` : 'chronological-sort'}`}
+                onClick={() => onSelectEmail(email)}
+              >
+                <div className="email-header-row">
+                  {sortByPriority && (
+                    <div className="email-priority-badge">
+                      Priority: {email.priorityScore || '-'}/10
+                    </div>
+                  )}
+                  <div className={`email-date ${!sortByPriority ? 'full-width' : ''}`}>{formatDate(email.date)}</div>
                 </div>
-                <div className="email-date">{formatDate(email.date)}</div>
+                <div className="email-sender">{extractName(email.from)}</div>
+                <div className="email-subject">{email.subject}</div>
+                <div className="email-snippet">{email.snippet}</div>
+                {sortByPriority && email.suggestedResponseTime && (
+                  <div className="response-time">
+                    Respond {email.suggestedResponseTime}
+                  </div>
+                )}
               </div>
-              <div className="email-sender">{extractName(email.from)}</div>
-              <div className="email-subject">{email.subject}</div>
-              <div className="email-snippet">{email.snippet}</div>
-              {email.suggestedResponseTime && (
-                <div className="response-time">
-                  Respond {email.suggestedResponseTime}
-                </div>
-              )}
-            </div>
-          ))}
+            ))}
+          </div>
         </div>
-      </div>
-    )}
-  </div>
-);
+      )}
+    </div>
+  );
+};
 
 // EmailDetail component
 const EmailDetail: React.FC<EmailDetailProps> = ({ email, onBack, onMarkAsRead }) => {
@@ -147,6 +154,17 @@ const EmailDetail: React.FC<EmailDetailProps> = ({ email, onBack, onMarkAsRead }
           {email.inboxType && (
             <div className="email-inbox-type">
               <strong>Category:</strong> {email.inboxType}
+            </div>
+          )}
+          <div className="email-priority">
+            <strong>Priority:</strong> {email.priorityScore}/10
+            {email.suggestedResponseTime && (
+              <span className="suggested-response"> - Respond {email.suggestedResponseTime}</span>
+            )}
+          </div>
+          {email.priorityReasoning && (
+            <div className="email-priority-reasoning">
+              <strong>Analysis:</strong> {email.priorityReasoning}
             </div>
           )}
         </div>
@@ -188,6 +206,7 @@ function App() {
   const [unreadCount, setUnreadCount] = useState<number>(0);
   const [totalCount, setTotalCount] = useState<number>(0);
   const [token, setToken] = useState<string| null>(null);
+  const [sortByPriority, setSortByPriority] = useState<boolean>(false);
 
   // Check authentication status on component mount
   useEffect(() => {
@@ -317,14 +336,24 @@ function App() {
     }
   };
 
+  // Toggle sort order
+  const toggleSortOrder = () => {
+    setSortByPriority(prev => !prev);
+  };
+
   return (
     <div className="App">
       <header className="App-header">
         <h1>Mail Bites</h1>
         {authenticated && (
-          <button className="refresh-button" onClick={handleRefresh} disabled={loading}>
-            ↻ Refresh
-          </button>
+          <div className="header-buttons">
+            <button className="refresh-button" onClick={handleRefresh} disabled={loading}>
+              ↻ Refresh
+            </button>
+            <button className="sort-button" onClick={toggleSortOrder}>
+              {sortByPriority ? "Sort Chronologically" : "Sort By Priority"}
+            </button>
+          </div>
         )}
       </header>
       
@@ -347,11 +376,14 @@ function App() {
           />
         ) : (
           <EmailList 
-            emails={emails.sort((a, b) => (b.priorityScore || 5) - (a.priorityScore || 5))} 
+            emails={sortByPriority 
+              ? [...emails].sort((a, b) => (b.priorityScore || 5) - (a.priorityScore || 5))
+              : [...emails].sort((a, b) => new Date(b.receivedDate || b.date).getTime() - new Date(a.receivedDate || a.date).getTime())} 
             onSelectEmail={handleSelectEmail} 
             loading={loading}
             unreadCount={unreadCount}
             totalCount={totalCount}
+            sortByPriority={sortByPriority}
           />
         )}
       </main>
