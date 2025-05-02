@@ -441,4 +441,40 @@ chrome.runtime.onMessage.addListener((request, sender, sendResponse) => {
     });
     return true;  // keep channel open
   }
+
+  if (request.action === "draftResponse") {
+    const email = request.data;
+    const prompt = `You are a helpful assistant. Please draft a professional, polite response to the following email:
+  
+  Subject: ${email.subject}
+  Content: ${email.body}
+  
+  The response should be courteous and address the topic of the email.`;
+  
+    const requestBody = {
+      contents: [{ parts: [{ text: prompt }] }],
+      generationConfig: {
+        temperature: 0.7,
+        maxOutputTokens: 512
+      }
+    };
+  
+    fetch(`${GEMINI_API_URL}?key=${GEMINI_API_KEY}`, {
+      method: 'POST',
+      headers: { 'Content-Type': 'application/json' },
+      body: JSON.stringify(requestBody)
+    })
+      .then(res => res.json())
+      .then(data => {
+        const text = data.candidates[0].content.parts[0].text;
+        sendResponse({ draft: text });
+      })
+      .catch(err => {
+        console.error('Drafting failed:', err);
+        sendResponse({ draft: 'Error generating draft.' });
+      });
+  
+    return true;
+  }
+  
 });
