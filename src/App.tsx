@@ -221,6 +221,12 @@ function App() {
   const [token, setToken] = useState<string| null>(null);
   const [sortByPriority, setSortByPriority] = useState<boolean>(false);
   const [summary, setSummary] = useState<string | undefined>(undefined);
+  const [showTodo, setShowTodo] = useState(false);
+  const [todos, setTodos] = useState<{ task: string; done: boolean }[]>([]);
+  const [loadingTodos, setLoadingTodos] = useState(false);
+
+  
+
 
   // Check authentication status on component mount
   useEffect(() => {
@@ -356,19 +362,49 @@ function App() {
     setSortByPriority(prev => !prev);
   };
 
+  //for to-do list
+  const handleGenerateTodos = () => {
+    setShowTodo(true);
+    setLoadingTodos(true);
+  
+    chrome.runtime.sendMessage({ action: "getTodos", token }, (response) => {
+      if (chrome.runtime.lastError) {
+        console.error("Runtime error:", chrome.runtime.lastError.message);
+        setLoadingTodos(false);
+        return;
+      }
+    
+      console.log("Got todo response:", response);
+    
+      if (response?.todos?.length) {
+        setTodos(response.todos);
+      } else {
+        console.warn("No todos returned");
+        setTodos([]);
+      }
+    
+      setLoadingTodos(false);
+    });
+  };
+  
+  
+
   return (
     <div className="App">
       <header className="App-header">
         <h1>Mail Bites</h1>
         {authenticated && (
           <div className="header-buttons">
-            <button className="refresh-button" onClick={handleRefresh} disabled={loading}>
-              ↻ Refresh
-            </button>
-            <button className="sort-button" onClick={toggleSortOrder}>
-              {sortByPriority ? "Sort Chronologically" : "Sort By Priority"}
-            </button>
-          </div>
+          <button className="refresh-button" onClick={handleRefresh} disabled={showTodo || loading}>
+            ↻ Refresh
+          </button>
+          <button className="sort-button" onClick={handleGenerateTodos} >
+            View To-Do List
+          </button>
+          <button className="sort-button" onClick={toggleSortOrder} disabled={showTodo}>
+            {sortByPriority ? "Sort Chronologically" : "Sort By Priority"}
+          </button>
+        </div>
         )}
       </header>
       
@@ -383,6 +419,26 @@ function App() {
         )}
         {!authenticated ? (
           <AuthButton onAuth={handleAuth} loading={loading} />
+          //to-do list
+        ) : showTodo ? (
+          <div className="todo-list">
+            <button className="back-button" onClick={() => setShowTodo(false)}>
+          ← Back to Inbox
+            </button>
+          <h2>Email To-Do List</h2>
+          {todos.length === 0 ? (
+          <p>No actionable tasks found.</p>
+            ) : (
+          <ul className="todo-bullet-list">
+            {todos.map((item, index) => (
+            <li key={index} className="todo-bullet-item">
+              {item.task}
+            </li>
+          ))}
+          </ul>
+          )}
+
+        </div>
         ) : selectedEmail ? (
           <EmailDetail 
             email={selectedEmail} 

@@ -18,7 +18,7 @@
     "https://www.googleapis.com/*"
   ],
   "oauth2": {
-    "client_id": "1002529431506-t32u3kf1f6ekmundt4vbagbdtk7p8qtm.apps.googleusercontent.com",
+    "client_id": "561872879244-tg21ruuq16ceqdflh1rhbkp71utk8pae.apps.googleusercontent.com",
     "scopes": [
       "https://www.googleapis.com/auth/gmail.readonly",
       "https://www.googleapis.com/auth/gmail.labels"
@@ -36,7 +36,8 @@
   "content_scripts": [
     {
       "matches": ["https://mail.google.com/*"],
-      "js": ["contentScript.js"]
+      "js": ["contentScript.js"],
+      "run_at": "document_idle"
     }
   ]
 }

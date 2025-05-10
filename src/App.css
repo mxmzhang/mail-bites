@@ -429,3 +429,26 @@
   white-space: pre-wrap;
   font-size: 0.95em;
 }
+
+.todo-button {
+  background-color: #007bff;
+  color: white;
+  border: none;
+  padding: 6px 10px;
+  margin-left: 10px;
+  border-radius: 4px;
+  cursor: pointer;
+}
+
+.todo-container {
+  padding: 10px;
+}
+
+.todo-list {
+  list-style: none;
+  padding-left: 0;
+}
+
+.todo-list li {
+  margin-bottom: 8px;
+}

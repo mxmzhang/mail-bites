@@ -54,7 +54,7 @@ function authenticateWithGmail(callback) {
 }
 
 // Gmail/Gemini config (Gemini calls are currently bypassed with test scores)
-const GEMINI_API_KEY = 'AIzaSyBhtPMT2Oj_B-BY2WgStFIWZGL3v7yZIHQ';
+const GEMINI_API_KEY = 'AIzaSyBzVtKG8wr-zGAgYL7q0_hZ2C3y1kY7o60';
 const GEMINI_API_URL = 'https://generativelanguage.googleapis.com/v1beta/models/gemini-2.0-flash:generateContent';
 
 // Base64 decoder for email bodies
@@ -218,12 +218,17 @@ async function fetchEmails(token, callback) {
     console.log('Generated summary:', summary);
 
     // 6) Send back to popup
+    chrome.storage.local.set({ emails: scored }, () => {
+      console.log("✅ Emails saved to local storage:", scored);
+    });
+    
     callback({
       emails: scored,
       unreadCount: scored.length,
       totalCount: processed.length,
       summary: summary
     });
+
 
   } catch (error) {
     console.error('Error in fetchEmails:', error);
@@ -483,6 +488,74 @@ chrome.runtime.onMessage.addListener((request, sender, sendResponse) => {
   
     return true;
   }
+
+  //to-do list
+  if (request.action === "getTodos") {
+    console.log("⚙️ Received getTodos request from popup");
+    const token = request.token;
+    if (!token) {
+      sendResponse({ error: 'No authentication token provided' });
+      return true;
+    }
+  
+    chrome.storage.local.get('emails', async (result) => {
+      const emails = result.emails || [];
+      try {
+        const prompt = `You are an expert task extractor. Extract actionable to-do tasks from the following emails.
+        ${emails.map(email => `
+          Email ${emails.indexOf(email) + 1}:
+          - Subject: ${email.subject}
+          - From: ${email.from}
+          - Priority: ${email.priorityScore}/10
+          - Content: ${email.body || email.snippet}
+          `).join('\n')}
+          
+         Return a plain bullet list with NO additional text. From each email determine a task the user must accomplish such as if a package delivery
+         is notified a task is "pickup package from delivery room". Try to be specific but concise. Also filter by most to least urgent.
+  `;
+  
+        const requestBody = {
+          contents: [{ parts: [{ text: prompt }] }],
+          generationConfig: {
+            temperature: 0.3,
+            maxOutputTokens: 1024
+          }
+        };
+  
+        const res = await fetch(`${GEMINI_API_URL}?key=${GEMINI_API_KEY}`, {
+          method: 'POST',
+          headers: { 'Content-Type': 'application/json' },
+          body: JSON.stringify(requestBody)
+        });
+  
+        const data = await res.json();
+        let raw = '';
+        const candidates = data?.candidates || [];
+  
+        if (
+          candidates.length > 0 &&
+          candidates[0].content &&
+          Array.isArray(candidates[0].content.parts) &&
+          candidates[0].content.parts.length > 0
+        ) {
+          raw = candidates[0].content.parts[0].text || '';
+        }
+  
+        const items = (raw || '')
+          .split(/[\n•\-*]\s+/)
+          .filter(line => line.trim().length > 3)
+          .map(task => ({ task: task.trim(), done: false }));
+  
+        sendResponse({ todos: items });
+      } catch (error) {
+        console.error("Error generating todos:", error);
+        sendResponse({ error: "Failed to extract to-do list." });
+      }
+    });
+  
+    return true; // Keep the async channel open
+  }
+  
   
 });
 
