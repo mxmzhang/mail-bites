@@ -1,5 +1,6 @@
 import React, { useState, useEffect } from "react";
 import "./App.css";
+import { marked } from "marked";
 
 interface Email {
   id: string;
@@ -27,6 +28,7 @@ interface EmailListProps {
   unreadCount: number;
   totalCount?: number;
   sortByPriority: boolean;
+  summary?: string;
 }
 
 interface EmailDetailProps {
@@ -73,7 +75,7 @@ const formatDate = (dateString: string): string => {
 };
 
 // EmailList component
-const EmailList: React.FC<EmailListProps> = ({ emails, onSelectEmail, loading, unreadCount, totalCount, sortByPriority }) => {
+const EmailList: React.FC<EmailListProps> = ({ emails, onSelectEmail, loading, unreadCount, totalCount, sortByPriority, summary }) => {
   return (
     <div>
       {loading ? (
@@ -91,6 +93,17 @@ const EmailList: React.FC<EmailListProps> = ({ emails, onSelectEmail, loading, u
               </span>
             )}
           </div>
+          
+          {summary && (
+            <div className="email-summary">
+              <h3>Summary of Unread Emails</h3>
+              <div
+                className="summary-content"
+                dangerouslySetInnerHTML={{ __html: marked(summary) }}
+              />
+            </div>
+          )}
+          
           <div className="email-items">
             {emails.map((email) => (
               <div 
@@ -207,6 +220,7 @@ function App() {
   const [totalCount, setTotalCount] = useState<number>(0);
   const [token, setToken] = useState<string| null>(null);
   const [sortByPriority, setSortByPriority] = useState<boolean>(false);
+  const [summary, setSummary] = useState<string | undefined>(undefined);
 
   // Check authentication status on component mount
   useEffect(() => {
@@ -279,6 +293,7 @@ function App() {
           setEmails(response.emails);
           setUnreadCount(response.unreadCount || response.emails.length);
           setTotalCount(response.totalCount || response.emails.length);
+          setSummary(response.summary || null);
           setLoading(false);
         } else if (response?.error) {
           console.error('Error fetching emails:', response.error);
@@ -384,6 +399,7 @@ function App() {
             unreadCount={unreadCount}
             totalCount={totalCount}
             sortByPriority={sortByPriority}
+            summary={summary}
           />
         )}
       </main>

@@ -7,6 +7,7 @@
     "@types/node": "^20.0.0",
     "@types/react": "^18.0.27",
     "@types/react-dom": "^18.0.10",
+    "marked": "^15.0.11",
     "react": "^18.2.0",
     "react-dom": "^18.2.0",
     "typescript": "^4.9.4",
@@ -54,7 +55,9 @@
   "jest": {
     "preset": "ts-jest",
     "testEnvironment": "jsdom",
-    "setupFilesAfterEnv": ["<rootDir>/src/setupTests.ts"],
+    "setupFilesAfterEnv": [
+      "<rootDir>/src/setupTests.ts"
+    ],
     "transform": {
       "^.+\\.(js|jsx|ts|tsx)$": "ts-jest",
       "^.+\\.css$": "<rootDir>/src/__mocks__/styleMock.js"
@@ -62,11 +65,21 @@
     "moduleNameMapper": {
       "\\.(css|less)$": "<rootDir>/src/__mocks__/styleMock.js"
     },
-    "coverageReporters": ["text", "html"],
+    "coverageReporters": [
+      "text",
+      "html"
+    ],
     "testMatch": [
       "**/__tests__/**/*.[jt]s?(x)",
       "**/?(*.)+(spec|test).[jt]s?(x)"
     ],
-    "moduleFileExtensions": ["ts", "tsx", "js", "jsx", "json", "node"]
+    "moduleFileExtensions": [
+      "ts",
+      "tsx",
+      "js",
+      "jsx",
+      "json",
+      "node"
+    ]
   }
 }

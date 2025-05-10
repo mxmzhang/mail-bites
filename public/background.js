@@ -39,7 +39,9 @@ chrome.action.onClicked.addListener((tab) => {
 
 // Handle direct authentication
 function authenticateWithGmail(callback) {
+  console.log('Starting authentication process...');
   chrome.identity.getAuthToken({ interactive: true }, (token) => {
+    console.log("getting auth token")
     if (chrome.runtime.lastError) {
       console.error('Auth Error:', chrome.runtime.lastError.message);
       callback({ error: chrome.runtime.lastError.message || 'Authentication failed' });
@@ -52,7 +54,7 @@ function authenticateWithGmail(callback) {
 }
 
 // Gmail/Gemini config (Gemini calls are currently bypassed with test scores)
-const GEMINI_API_KEY = 'YOUR_API_KEY';
+const GEMINI_API_KEY = 'AIzaSyBhtPMT2Oj_B-BY2WgStFIWZGL3v7yZIHQ';
 const GEMINI_API_URL = 'https://generativelanguage.googleapis.com/v1beta/models/gemini-2.0-flash:generateContent';
 
 // Base64 decoder for email bodies
@@ -211,11 +213,16 @@ async function fetchEmails(token, callback) {
     
     console.log('Analysis complete for all emails:', scored.length);
 
+    // Generate summary of all emails
+    const summary = await generateEmailsSummary(scored);
+    console.log('Generated summary:', summary);
+
     // 6) Send back to popup
     callback({
       emails: scored,
       unreadCount: scored.length,
-      totalCount: processed.length
+      totalCount: processed.length,
+      summary: summary
     });
 
   } catch (error) {
@@ -478,3 +485,59 @@ chrome.runtime.onMessage.addListener((request, sender, sendResponse) => {
   }
   
 });
+
+// Generate a summary of all emails using Gemini
+async function generateEmailsSummary(emails) {
+  console.log('Generating summary of all emails...');
+  try {
+    const prompt = `You are an email summarizer. Please provide a concise summary of the following unread emails from the last 24 hours:
+
+${emails.map(email => `
+Email ${emails.indexOf(email) + 1}:
+- Subject: ${email.subject}
+- From: ${email.from}
+- Priority: ${email.priorityScore}/10
+- Content: ${email.body || email.snippet}
+`).join('\n')}
+
+Please provide a summary that includes:
+1. Overall theme/topics of the emails
+2. If the email details any action items, list them
+
+Please ignore any newsletters or promotional emails.
+
+Output ONLY the summaries (no text before or after) as a list so that each email is a bullet point. Before the summary of each email, put a few word headline of the email.
+
+Keep the summary concise but informative.`;
+
+    const requestBody = {
+      contents: [{
+        parts: [{
+          text: prompt
+        }]
+      }],
+      generationConfig: {
+        temperature: 0.3,
+        maxOutputTokens: 1024
+      }
+    };
+
+    const response = await fetch(`${GEMINI_API_URL}?key=${GEMINI_API_KEY}`, {
+      method: 'POST',
+      headers: {
+        'Content-Type': 'application/json',
+      },
+      body: JSON.stringify(requestBody)
+    });
+
+    if (!response.ok) {
+      throw new Error(`Gemini API error: ${response.status}`);
+    }
+
+    const data = await response.json();
+    return data.candidates[0].content.parts[0].text;
+  } catch (error) {
+    console.error('Error generating email summary:', error);
+    return 'Unable to generate summary at this time.';
+  }
+}

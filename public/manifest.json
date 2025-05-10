@@ -11,13 +11,14 @@
     "512": "images/android-chrome-512x512.png"
   },
   "offline_enabled": true,
-  "permissions": ["storage", "activeTab", "contextMenus", "identity", "sidePanel"],
+  "permissions": ["storage", "activeTab", "contextMenus", "identity", "sidePanel", "identity.email"],
   "host_permissions": [
     "https://mail.google.com/*",
-    "https://*.googleusercontent.com/*"
+    "https://*.googleusercontent.com/*",
+    "https://www.googleapis.com/*"
   ],
   "oauth2": {
-    "client_id": "",
+    "client_id": "1002529431506-t32u3kf1f6ekmundt4vbagbdtk7p8qtm.apps.googleusercontent.com",
     "scopes": [
       "https://www.googleapis.com/auth/gmail.readonly",
       "https://www.googleapis.com/auth/gmail.labels"
