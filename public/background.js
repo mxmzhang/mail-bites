@@ -38,19 +38,45 @@ chrome.action.onClicked.addListener((tab) => {
 });
 
 // Handle direct authentication
+const clientId = '1002963911398-7r33favn0h22aa5j6sk5fgv4tdshqhe5.apps.googleusercontent.com';
+const redirectUri = `https://${chrome.runtime.id}.chromiumapp.org`;
+const scopes = [
+  'https://www.googleapis.com/auth/gmail.readonly',
+  'https://www.googleapis.com/auth/gmail.labels'
+];
+
 function authenticateWithGmail(callback) {
-  console.log('Starting authentication process...');
-  chrome.identity.getAuthToken({ interactive: true }, (token) => {
-    console.log("getting auth token")
-    if (chrome.runtime.lastError) {
-      console.error('Auth Error:', chrome.runtime.lastError.message);
-      callback({ error: chrome.runtime.lastError.message || 'Authentication failed' });
-    } else {
-      console.log('Authentication successful, token received');
-      chrome.storage.local.set({ authenticated: true });
-      callback({ token });
+  const authUrl =
+    `https://accounts.google.com/o/oauth2/auth` +
+    `?client_id=${encodeURIComponent(clientId)}` +
+    `&response_type=token` +
+    `&redirect_uri=${encodeURIComponent(redirectUri)}` +
+    `&scope=${encodeURIComponent(scopes.join(' '))}`;
+
+  chrome.identity.launchWebAuthFlow(
+    { url: authUrl, interactive: true },
+    (redirectUrl) => {
+      if (chrome.runtime.lastError) {
+        console.error('OAuth error:', chrome.runtime.lastError.message);
+        callback({ error: chrome.runtime.lastError.message });
+        return;
+      }
+
+      if (redirectUrl) {
+        const params = new URLSearchParams(new URL(redirectUrl).hash.substring(1));
+        const token = params.get('access_token');
+
+        if (token) {
+          console.log('OAuth successful. Token:', token);
+          chrome.storage.local.set({ authenticated: true });
+          callback({ token });
+        } else {
+          console.error('No access token received');
+          callback({ error: 'No access token received' });
+        }
+      }
     }
-  });
+  );
 }
 
 // Gmail/Gemini config (Gemini calls are currently bypassed with test scores)

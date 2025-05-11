@@ -11,28 +11,28 @@
     "512": "images/android-chrome-512x512.png"
   },
   "offline_enabled": true,
-<<<<<<< HEAD
-=======
-  "permissions": ["storage", "activeTab", "contextMenus", "identity", "sidePanel", "identity.email"],
+  "permissions": [
+    "storage",
+    "activeTab",
+    "contextMenus",
+    "identity",
+    "sidePanel",
+    "identity.email"
+  ],
   "host_permissions": [
     "https://mail.google.com/*",
     "https://*.googleusercontent.com/*",
-    "https://www.googleapis.com/*"
+    "https://www.googleapis.com/*",
+    "https://accounts.google.com/*"
   ],
->>>>>>> 9e683ceed35e1da1e79ebb354f719314a9775781
   "oauth2": {
-    "client_id": "561872879244-tg21ruuq16ceqdflh1rhbkp71utk8pae.apps.googleusercontent.com",
+    "client_id": "1002963911398-7r33favn0h22aa5j6sk5fgv4tdshqhe5.apps.googleusercontent.com",
     "scopes": [
       "https://www.googleapis.com/auth/gmail.readonly",
       "https://www.googleapis.com/auth/gmail.labels"
     ]
   },
 
-  "permissions": ["storage", "activeTab", "contextMenus", "identity", "sidePanel"],
-  "host_permissions": [
-    "https://mail.google.com/*",
-    "https://*.googleusercontent.com/*"
-  ],
   "background": {
     "service_worker": "background.js"
   },
