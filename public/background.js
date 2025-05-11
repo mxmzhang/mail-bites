@@ -39,7 +39,9 @@ chrome.action.onClicked.addListener((tab) => {
 
 // Handle direct authentication
 function authenticateWithGmail(callback) {
+  console.log('Starting authentication process...');
   chrome.identity.getAuthToken({ interactive: true }, (token) => {
+    console.log("getting auth token")
     if (chrome.runtime.lastError) {
       console.error('Auth Error:', chrome.runtime.lastError.message);
       callback({ error: chrome.runtime.lastError.message || 'Authentication failed' });
@@ -52,7 +54,7 @@ function authenticateWithGmail(callback) {
 }
 
 // Gmail/Gemini config (Gemini calls are currently bypassed with test scores)
-const GEMINI_API_KEY = 'YOUR_API_KEY';
+const GEMINI_API_KEY = 'AIzaSyBzVtKG8wr-zGAgYL7q0_hZ2C3y1kY7o60';
 const GEMINI_API_URL = 'https://generativelanguage.googleapis.com/v1beta/models/gemini-2.0-flash:generateContent';
 
 // Base64 decoder for email bodies
@@ -211,12 +213,22 @@ async function fetchEmails(token, callback) {
     
     console.log('Analysis complete for all emails:', scored.length);
 
+    // Generate summary of all emails
+    const summary = await generateEmailsSummary(scored);
+    console.log('Generated summary:', summary);
+
     // 6) Send back to popup
+    chrome.storage.local.set({ emails: scored }, () => {
+      console.log("✅ Emails saved to local storage:", scored);
+    });
+    
     callback({
       emails: scored,
       unreadCount: scored.length,
-      totalCount: processed.length
+      totalCount: processed.length,
+      summary: summary
     });
+
 
   } catch (error) {
     console.error('Error in fetchEmails:', error);
@@ -476,5 +488,129 @@ chrome.runtime.onMessage.addListener((request, sender, sendResponse) => {
   
     return true;
   }
+
+  //to-do list
+  if (request.action === "getTodos") {
+    console.log("⚙️ Received getTodos request from popup");
+    const token = request.token;
+    if (!token) {
+      sendResponse({ error: 'No authentication token provided' });
+      return true;
+    }
+  
+    chrome.storage.local.get('emails', async (result) => {
+      const emails = result.emails || [];
+      try {
+        const prompt = `You are an expert task extractor. Extract actionable to-do tasks from the following emails.
+        ${emails.map(email => `
+          Email ${emails.indexOf(email) + 1}:
+          - Subject: ${email.subject}
+          - From: ${email.from}
+          - Priority: ${email.priorityScore}/10
+          - Content: ${email.body || email.snippet}
+          `).join('\n')}
+          
+         Return a plain bullet list with NO additional text. From each email determine a task the user must accomplish such as if a package delivery
+         is notified a task is "pickup package from delivery room". Try to be specific but concise. Also filter by most to least urgent.
+  `;
+  
+        const requestBody = {
+          contents: [{ parts: [{ text: prompt }] }],
+          generationConfig: {
+            temperature: 0.3,
+            maxOutputTokens: 1024
+          }
+        };
+  
+        const res = await fetch(`${GEMINI_API_URL}?key=${GEMINI_API_KEY}`, {
+          method: 'POST',
+          headers: { 'Content-Type': 'application/json' },
+          body: JSON.stringify(requestBody)
+        });
+  
+        const data = await res.json();
+        let raw = '';
+        const candidates = data?.candidates || [];
+  
+        if (
+          candidates.length > 0 &&
+          candidates[0].content &&
+          Array.isArray(candidates[0].content.parts) &&
+          candidates[0].content.parts.length > 0
+        ) {
+          raw = candidates[0].content.parts[0].text || '';
+        }
+  
+        const items = (raw || '')
+          .split(/[\n•\-*]\s+/)
+          .filter(line => line.trim().length > 3)
+          .map(task => ({ task: task.trim(), done: false }));
+  
+        sendResponse({ todos: items });
+      } catch (error) {
+        console.error("Error generating todos:", error);
+        sendResponse({ error: "Failed to extract to-do list." });
+      }
+    });
+  
+    return true; // Keep the async channel open
+  }
+  
   
 });
+
+// Generate a summary of all emails using Gemini
+async function generateEmailsSummary(emails) {
+  console.log('Generating summary of all emails...');
+  try {
+    const prompt = `You are an email summarizer. Please provide a concise summary of the following unread emails from the last 24 hours:
+
+${emails.map(email => `
+Email ${emails.indexOf(email) + 1}:
+- Subject: ${email.subject}
+- From: ${email.from}
+- Priority: ${email.priorityScore}/10
+- Content: ${email.body || email.snippet}
+`).join('\n')}
+
+Please provide a summary that includes:
+1. Overall theme/topics of the emails
+2. If the email details any action items, list them
+
+Please ignore any newsletters or promotional emails.
+
+Output ONLY the summaries (no text before or after) as a list so that each email is a bullet point. Before the summary of each email, put a few word headline of the email.
+
+Keep the summary concise but informative.`;
+
+    const requestBody = {
+      contents: [{
+        parts: [{
+          text: prompt
+        }]
+      }],
+      generationConfig: {
+        temperature: 0.3,
+        maxOutputTokens: 1024
+      }
+    };
+
+    const response = await fetch(`${GEMINI_API_URL}?key=${GEMINI_API_KEY}`, {
+      method: 'POST',
+      headers: {
+        'Content-Type': 'application/json',
+      },
+      body: JSON.stringify(requestBody)
+    });
+
+    if (!response.ok) {
+      throw new Error(`Gemini API error: ${response.status}`);
+    }
+
+    const data = await response.json();
+    return data.candidates[0].content.parts[0].text;
+  } catch (error) {
+    console.error('Error generating email summary:', error);
+    return 'Unable to generate summary at this time.';
+  }
+}

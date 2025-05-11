@@ -1,5 +1,6 @@
 import React, { useState, useEffect } from "react";
 import "./App.css";
+import { marked } from "marked";
 
 interface Email {
   id: string;
@@ -27,6 +28,7 @@ interface EmailListProps {
   unreadCount: number;
   totalCount?: number;
   sortByPriority: boolean;
+  summary?: string;
 }
 
 interface EmailDetailProps {
@@ -73,7 +75,7 @@ const formatDate = (dateString: string): string => {
 };
 
 // EmailList component
-const EmailList: React.FC<EmailListProps> = ({ emails, onSelectEmail, loading, unreadCount, totalCount, sortByPriority }) => {
+const EmailList: React.FC<EmailListProps> = ({ emails, onSelectEmail, loading, unreadCount, totalCount, sortByPriority, summary }) => {
   return (
     <div>
       {loading ? (
@@ -91,6 +93,17 @@ const EmailList: React.FC<EmailListProps> = ({ emails, onSelectEmail, loading, u
               </span>
             )}
           </div>
+          
+          {summary && (
+            <div className="email-summary">
+              <h3>Summary of Unread Emails</h3>
+              <div
+                className="summary-content"
+                dangerouslySetInnerHTML={{ __html: marked(summary) }}
+              />
+            </div>
+          )}
+          
           <div className="email-items">
             {emails.map((email) => (
               <div 
@@ -207,6 +220,13 @@ function App() {
   const [totalCount, setTotalCount] = useState<number>(0);
   const [token, setToken] = useState<string| null>(null);
   const [sortByPriority, setSortByPriority] = useState<boolean>(false);
+  const [summary, setSummary] = useState<string | undefined>(undefined);
+  const [showTodo, setShowTodo] = useState(false);
+  const [todos, setTodos] = useState<{ task: string; done: boolean }[]>([]);
+  const [loadingTodos, setLoadingTodos] = useState(false);
+
+  
+
 
   // Check authentication status on component mount
   useEffect(() => {
@@ -279,6 +299,7 @@ function App() {
           setEmails(response.emails);
           setUnreadCount(response.unreadCount || response.emails.length);
           setTotalCount(response.totalCount || response.emails.length);
+          setSummary(response.summary || null);
           setLoading(false);
         } else if (response?.error) {
           console.error('Error fetching emails:', response.error);
@@ -341,19 +362,49 @@ function App() {
     setSortByPriority(prev => !prev);
   };
 
+  //for to-do list
+  const handleGenerateTodos = () => {
+    setShowTodo(true);
+    setLoadingTodos(true);
+  
+    chrome.runtime.sendMessage({ action: "getTodos", token }, (response) => {
+      if (chrome.runtime.lastError) {
+        console.error("Runtime error:", chrome.runtime.lastError.message);
+        setLoadingTodos(false);
+        return;
+      }
+    
+      console.log("Got todo response:", response);
+    
+      if (response?.todos?.length) {
+        setTodos(response.todos);
+      } else {
+        console.warn("No todos returned");
+        setTodos([]);
+      }
+    
+      setLoadingTodos(false);
+    });
+  };
+  
+  
+
   return (
     <div className="App">
       <header className="App-header">
         <h1>Mail Bites</h1>
         {authenticated && (
           <div className="header-buttons">
-            <button className="refresh-button" onClick={handleRefresh} disabled={loading}>
-              ↻ Refresh
-            </button>
-            <button className="sort-button" onClick={toggleSortOrder}>
-              {sortByPriority ? "Sort Chronologically" : "Sort By Priority"}
-            </button>
-          </div>
+          <button className="refresh-button" onClick={handleRefresh} disabled={showTodo || loading}>
+            ↻ Refresh
+          </button>
+          <button className="sort-button" onClick={handleGenerateTodos} >
+            View To-Do List
+          </button>
+          <button className="sort-button" onClick={toggleSortOrder} disabled={showTodo}>
+            {sortByPriority ? "Sort Chronologically" : "Sort By Priority"}
+          </button>
+        </div>
         )}
       </header>
       
@@ -368,6 +419,26 @@ function App() {
         )}
         {!authenticated ? (
           <AuthButton onAuth={handleAuth} loading={loading} />
+          //to-do list
+        ) : showTodo ? (
+          <div className="todo-list">
+            <button className="back-button" onClick={() => setShowTodo(false)}>
+          ← Back to Inbox
+            </button>
+          <h2>Email To-Do List</h2>
+          {todos.length === 0 ? (
+          <p>No actionable tasks found.</p>
+            ) : (
+          <ul className="todo-bullet-list">
+            {todos.map((item, index) => (
+            <li key={index} className="todo-bullet-item">
+              {item.task}
+            </li>
+          ))}
+          </ul>
+          )}
+
+        </div>
         ) : selectedEmail ? (
           <EmailDetail 
             email={selectedEmail} 
@@ -384,6 +455,7 @@ function App() {
             unreadCount={unreadCount}
             totalCount={totalCount}
             sortByPriority={sortByPriority}
+            summary={summary}
           />
         )}
       </main>

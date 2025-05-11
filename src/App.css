@@ -406,3 +406,49 @@
   margin-top: 8px;
   font-style: italic;
 }
+
+.email-summary {
+  background-color: #f8f9fa;
+  border: 1px solid #e9ecef;
+  border-radius: 8px;
+  padding: 16px;
+  margin: 16px 0;
+  box-shadow: 0 2px 4px rgba(0, 0, 0, 0.05);
+}
+
+.email-summary h3 {
+  color: #2c3e50;
+  margin: 0 0 12px 0;
+  font-size: 1.1em;
+  font-weight: 600;
+}
+
+.summary-content {
+  color: #495057;
+  line-height: 1.5;
+  white-space: pre-wrap;
+  font-size: 0.95em;
+}
+
+.todo-button {
+  background-color: #007bff;
+  color: white;
+  border: none;
+  padding: 6px 10px;
+  margin-left: 10px;
+  border-radius: 4px;
+  cursor: pointer;
+}
+
+.todo-container {
+  padding: 10px;
+}
+
+.todo-list {
+  list-style: none;
+  padding-left: 0;
+}
+
+.todo-list li {
+  margin-bottom: 8px;
+}
