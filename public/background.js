@@ -229,7 +229,6 @@ async function fetchEmails(token, callback) {
       summary: summary
     });
 
-
   } catch (error) {
     console.error('Error in fetchEmails:', error);
     callback({ error: error.message });
@@ -578,10 +577,48 @@ Please provide a summary that includes:
 2. If the email details any action items, list them
 
 Please ignore any newsletters or promotional emails.
+Please also categorize each email with relevant tags from this list:
+   - urgent: for time-sensitive matters
+   - follow-up: for emails requiring response
+   - meeting: for meeting requests or discussions
+   - task: for actionable items
+   - question: for inquiries
+   - report: for reports or updates
+   - review: for items needing review
+   - approval: for items needing approval
+   - feedback: for feedback requests
+   - deadline: for time-bound items
+   - reminder: for reminders
+   - notification: for general notifications
+   - newsletter: for newsletters
+   - promotion: for promotional content
+   - social: for social communications
+   - personal: for personal matters
+   - work: for work-related items
+   - client: for client communications
+   - team: for team communications
+   - project: for project-related items
 
-Output ONLY the summaries (no text before or after) as a list so that each email is a bullet point. Before the summary of each email, put a few word headline of the email.
+Output format:
+Return a JSON array where each object represents an email summary with the following structure:
+{
+  "summary": "Brief summary of the email content and key points",
+  "tags": ["tag1", "tag2", "tag3"]
+}
 
-Keep the summary concise but informative.`;
+Example output:
+[
+  {
+    "summary": "Project deadline approaching - need to submit final report by EOD",
+    "tags": ["urgent", "task", "deadline"]
+  },
+  {
+    "summary": "Team meeting scheduled for tomorrow at 10 AM to discuss progress",
+    "tags": ["meeting", "team", "follow-up"]
+  }
+]
+
+Keep the summary concise but informative. Each email should be summarized in no more than 3 sentences.`;
 
     const requestBody = {
       contents: [{
@@ -608,9 +645,35 @@ Keep the summary concise but informative.`;
     }
 
     const data = await response.json();
-    return data.candidates[0].content.parts[0].text;
+    const summaryText = data.candidates[0].content.parts[0].text;
+    
+    try {
+      // Clean up the response text to ensure valid JSON
+      let cleanText = summaryText.trim();
+      
+      // Remove any markdown code block indicators
+      cleanText = cleanText.replace(/```json|```/g, '').trim();
+      
+      // Find the first [ and last ] to extract just the JSON array
+      const startIndex = cleanText.indexOf('[');
+      const endIndex = cleanText.lastIndexOf(']') + 1;
+      
+      if (startIndex >= 0 && endIndex > startIndex) {
+        cleanText = cleanText.substring(startIndex, endIndex);
+      }
+      
+      console.log('Cleaned JSON text:', cleanText); // Debug log
+      
+      // Parse the JSON response
+      const summaries = JSON.parse(cleanText);
+      return summaries;
+    } catch (jsonError) {
+      console.error('Error parsing summary JSON:', jsonError);
+      console.log('Raw response text:', summaryText); // Debug log
+      return []; // Return empty array if JSON parsing fails
+    }
   } catch (error) {
     console.error('Error generating email summary:', error);
-    return 'Unable to generate summary at this time.';
+    return [];
   }
 }

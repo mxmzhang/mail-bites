@@ -21,6 +21,11 @@ interface Email {
   suggestedResponseTime?: string;
 }
 
+interface EmailSummary {
+  summary: string;
+  tags: string[];
+}
+
 interface EmailListProps {
   emails: Email[];
   onSelectEmail: (email: Email) => void;
@@ -28,7 +33,7 @@ interface EmailListProps {
   unreadCount: number;
   totalCount?: number;
   sortByPriority: boolean;
-  summary?: string;
+  summary?: EmailSummary[];
 }
 
 interface EmailDetailProps {
@@ -76,6 +81,8 @@ const formatDate = (dateString: string): string => {
 
 // EmailList component
 const EmailList: React.FC<EmailListProps> = ({ emails, onSelectEmail, loading, unreadCount, totalCount, sortByPriority, summary }) => {
+  console.log('EmailList received summary:', summary); // Debug log
+
   return (
     <div>
       {loading ? (
@@ -94,42 +101,58 @@ const EmailList: React.FC<EmailListProps> = ({ emails, onSelectEmail, loading, u
             )}
           </div>
           
-          {summary && (
+          {summary && summary.length > 0 && (
             <div className="email-summary">
               <h3>Summary of Unread Emails</h3>
-              <div
-                className="summary-content"
-                dangerouslySetInnerHTML={{ __html: marked(summary) }}
-              />
+              <div className="summary-content">
+                {summary.map((item, index) => {
+                  console.log('Rendering summary item:', item); // Debug log
+                  return (
+                    <div key={index} className="summary-item">
+                      <div>{item.summary}</div>
+                      {item.tags && item.tags.length > 0 && (
+                        <div className="summary-tags">
+                          {item.tags.map((tag, tagIndex) => (
+                            <span
+                              key={tagIndex}
+                              className={`summary-tag tag-${tag}`}
+                            >
+                              {tag}
+                            </span>
+                          ))}
+                        </div>
+                      )}
+                    </div>
+                  );
+                })}
+              </div>
             </div>
           )}
           
-          <div className="email-items">
-            {emails.map((email) => (
-              <div 
-                key={email.id}
-                className={`email-item ${email.isUnread ? 'unread' : ''} ${email.isImportant ? 'important' : ''} ${sortByPriority ? `priority-${Math.ceil(email.priorityScore || 5)}` : 'chronological-sort'}`}
-                onClick={() => onSelectEmail(email)}
-              >
-                <div className="email-header-row">
-                  {sortByPriority && (
-                    <div className="email-priority-badge">
-                      Priority: {email.priorityScore || '-'}/10
-                    </div>
-                  )}
-                  <div className={`email-date ${!sortByPriority ? 'full-width' : ''}`}>{formatDate(email.date)}</div>
-                </div>
-                <div className="email-sender">{extractName(email.from)}</div>
-                <div className="email-subject">{email.subject}</div>
-                <div className="email-snippet">{email.snippet}</div>
-                {sortByPriority && email.suggestedResponseTime && (
-                  <div className="response-time">
-                    Respond {email.suggestedResponseTime}
+          {emails.map((email) => (
+            <div 
+              key={email.id}
+              className={`email-item ${email.isUnread ? 'unread' : ''} ${email.isImportant ? 'important' : ''} ${sortByPriority ? `priority-${Math.ceil(email.priorityScore || 5)}` : 'chronological-sort'}`}
+              onClick={() => onSelectEmail(email)}
+            >
+              <div className="email-header-row">
+                {sortByPriority && (
+                  <div className="email-priority-badge">
+                    Priority: {email.priorityScore || '-'}/10
                   </div>
                 )}
+                <div className={`email-date ${!sortByPriority ? 'full-width' : ''}`}>{formatDate(email.date)}</div>
               </div>
-            ))}
-          </div>
+              <div className="email-sender">{extractName(email.from)}</div>
+              <div className="email-subject">{email.subject}</div>
+              <div className="email-snippet">{email.snippet}</div>
+              {sortByPriority && email.suggestedResponseTime && (
+                <div className="response-time">
+                  Respond {email.suggestedResponseTime}
+                </div>
+              )}
+            </div>
+          ))}
         </div>
       )}
     </div>
@@ -220,7 +243,7 @@ function App() {
   const [totalCount, setTotalCount] = useState<number>(0);
   const [token, setToken] = useState<string| null>(null);
   const [sortByPriority, setSortByPriority] = useState<boolean>(false);
-  const [summary, setSummary] = useState<string | undefined>(undefined);
+  const [summary, setSummary] = useState<EmailSummary[] | undefined>(undefined);
   const [showTodo, setShowTodo] = useState(false);
   const [todos, setTodos] = useState<{ task: string; done: boolean }[]>([]);
   const [loadingTodos, setLoadingTodos] = useState(false);
@@ -299,7 +322,7 @@ function App() {
           setEmails(response.emails);
           setUnreadCount(response.unreadCount || response.emails.length);
           setTotalCount(response.totalCount || response.emails.length);
-          setSummary(response.summary || null);
+          setSummary(response.summary);
           setLoading(false);
         } else if (response?.error) {
           console.error('Error fetching emails:', response.error);

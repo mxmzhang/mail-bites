@@ -430,6 +430,55 @@
   font-size: 0.95em;
 }
 
+.summary-item {
+  margin-bottom: 16px;
+  padding-bottom: 8px;
+  border-bottom: 1px solid #e9ecef;
+}
+
+.summary-item:last-child {
+  border-bottom: none;
+  margin-bottom: 0;
+  padding-bottom: 0;
+}
+
+.summary-tags {
+  display: flex;
+  flex-wrap: wrap;
+  gap: 6px;
+  margin-top: 8px;
+}
+
+.summary-tag {
+  padding: 4px 8px;
+  border-radius: 12px;
+  font-size: 12px;
+  font-weight: 500;
+  color: white;
+}
+
+/* Tag colors */
+.tag-urgent { background-color: #d93025; }
+.tag-follow-up { background-color: #1a73e8; }
+.tag-meeting { background-color: #188038; }
+.tag-task { background-color: #9334e6; }
+.tag-question { background-color: #e37400; }
+.tag-report { background-color: #185abc; }
+.tag-review { background-color: #c5221f; }
+.tag-approval { background-color: #137333; }
+.tag-feedback { background-color: #b06000; }
+.tag-deadline { background-color: #d93025; }
+.tag-reminder { background-color: #1a73e8; }
+.tag-notification { background-color: #188038; }
+.tag-newsletter { background-color: #9334e6; }
+.tag-promotion { background-color: #e37400; }
+.tag-social { background-color: #185abc; }
+.tag-personal { background-color: #c5221f; }
+.tag-work { background-color: #137333; }
+.tag-client { background-color: #b06000; }
+.tag-team { background-color: #d93025; }
+.tag-project { background-color: #1a73e8; }
+
 .todo-button {
   background-color: #007bff;
   color: white;
