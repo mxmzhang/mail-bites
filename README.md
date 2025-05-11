@@ -4,11 +4,10 @@ Summarize unread emails in your inbox and generate a summary and a to-do list an
 
 ## Features
 
-- Authenticate with Gmail API to access your emails
-- View a list of recent emails
-- Sort emails by priority ratings given by LLM
-- Email summaries
-- Automatic To-Do lists 
+- Inbox Summary -Megan
+- To-Do List -Mona
+- Reply Generation -Darren
+- Prioritization -Fiona
 
 ## Setup
 Note that to run this extension before this is published on Chrome Web Store, you need to repeat the set up process individually to successfully launch this extension. At the end of the setup, you also need to add the testing gmail in the Audience tab in Google Cloud Project.
@@ -76,9 +75,16 @@ npm run build
 npm test
 ```
 
+## Future Work
+- Adapt for Outlook and other email services
+- Add automatic send email features
+- Directly add to google calendar for meetings and events
+- Give an estimate time for how long to read the unread emails
 ## Privacy Notice
 
 Mail Bites processes your Gmail data locally within the extension. No email data is sent to external servers. The extension uses OAuth 2.0 to authenticate with Gmail, giving you control over what data you share and the ability to revoke access at any time through your Google Account settings.
+
+
 
 ## License
 
