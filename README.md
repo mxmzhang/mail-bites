@@ -9,6 +9,10 @@ Summarize unread emails in your inbox and generate a summary and a to-do list an
 - Reply Generation -Darren
 - Prioritization -Fiona
 
+## Landing Page
+
+View our landing page live here: https://mkhosla11.github.io/mail-bites-landing-page/
+
 ## Setup
 Note that to run this extension before this is published on Chrome Web Store, you need to repeat the set up process individually to successfully launch this extension. At the end of the setup, you also need to add the testing gmail in the Audience tab in Google Cloud Project.
 
