@@ -29,8 +29,10 @@ function extractEmailContent() {
 function injectDraftButton() {
   if (document.getElementById('mail-bites-draft-button')) return;
 
-  const container = document.querySelector('.a3s');
-  if (!container) return;
+  // Try common Gmail email content containers
+  const container = document.querySelector('.a3s, .ii.gt');
+
+  if (!container || !container.parentElement) return;
 
   const button = document.createElement('button');
   button.id = 'mail-bites-draft-button';
@@ -43,6 +45,7 @@ function injectDraftButton() {
   button.style.border = 'none';
   button.style.borderRadius = '4px';
   button.style.cursor = 'pointer';
+  button.style.zIndex = 9999;
 
   button.onclick = () => {
     const emailContent = extractEmailContent();
@@ -56,7 +59,7 @@ function injectDraftButton() {
     });
   };
 
-  container.parentElement?.insertBefore(button, container);
+  container.parentElement.insertBefore(button, container);
 }
 
 function showDraftOverlay(draftText) {
@@ -69,32 +72,45 @@ function showDraftOverlay(draftText) {
   overlay.style.border = '1px solid #dadce0';
   overlay.style.borderRadius = '6px';
   overlay.style.padding = '12px';
-  overlay.style.marginTop = '10px';
+  overlay.style.marginBottom = '10px'; // leave spacing below
   overlay.style.fontFamily = 'Arial, sans-serif';
   overlay.style.fontSize = '14px';
   overlay.innerText = draftText;
 
   const container = document.querySelector('.a3s');
-  container?.appendChild(overlay);
+  if (container?.parentElement) {
+    container.parentElement.insertBefore(overlay, container); // ⬅ insert ABOVE
+  }
 }
 
 
 
 // Observe Gmail for changes since it's a single-page app
-const observer = new MutationObserver((mutations) => {
-  // Check if we're viewing an email
-  if (document.querySelector('.a3s')) {
-    chrome.runtime.sendMessage({ 
-      action: 'emailOpened',
-      data: extractEmailContent()
-    });
-    // Inject the button when an email is opened
+let lastUrl = location.href;
+
+const checkAndInject = () => {
+  const emailBody = document.querySelector('.a3s');
+  const alreadyInjected = document.getElementById('mail-bites-draft-button');
+
+  if (emailBody && !alreadyInjected) {
+    console.log("📩 Detected new email view. Injecting draft button.");
     injectDraftButton();
   }
+};
+
+const observer = new MutationObserver(() => {
+  const currentUrl = location.href;
+  if (currentUrl !== lastUrl) {
+    lastUrl = currentUrl;
+    setTimeout(checkAndInject, 1000);  // Delay for Gmail to fully render
+  }
 });
+
 
 // Start observing the document body for DOM changes
 observer.observe(document.body, { 
   childList: true, 
   subtree: true 
 }); 
+
+checkAndInject();
