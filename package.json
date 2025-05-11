@@ -39,7 +39,7 @@
     "sinon": "^17.0.1",
     "sinon-chrome": "^3.0.1",
     "ts-jest": "^29.1.2",
-    "vite": "^5.0.10"
+    "vite": "^5.4.19"
   },
   "babel": {
     "presets": [
@@ -54,7 +54,9 @@
   "jest": {
     "preset": "ts-jest",
     "testEnvironment": "jsdom",
-    "setupFilesAfterEnv": ["<rootDir>/src/setupTests.ts"],
+    "setupFilesAfterEnv": [
+      "<rootDir>/src/setupTests.ts"
+    ],
     "transform": {
       "^.+\\.(js|jsx|ts|tsx)$": "ts-jest",
       "^.+\\.css$": "<rootDir>/src/__mocks__/styleMock.js"
@@ -62,11 +64,21 @@
     "moduleNameMapper": {
       "\\.(css|less)$": "<rootDir>/src/__mocks__/styleMock.js"
     },
-    "coverageReporters": ["text", "html"],
+    "coverageReporters": [
+      "text",
+      "html"
+    ],
     "testMatch": [
       "**/__tests__/**/*.[jt]s?(x)",
       "**/?(*.)+(spec|test).[jt]s?(x)"
     ],
-    "moduleFileExtensions": ["ts", "tsx", "js", "jsx", "json", "node"]
+    "moduleFileExtensions": [
+      "ts",
+      "tsx",
+      "js",
+      "jsx",
+      "json",
+      "node"
+    ]
   }
 }

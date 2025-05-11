@@ -11,11 +11,6 @@
     "512": "images/android-chrome-512x512.png"
   },
   "offline_enabled": true,
-  "permissions": ["storage", "activeTab", "contextMenus", "identity", "sidePanel"],
-  "host_permissions": [
-    "https://mail.google.com/*",
-    "https://*.googleusercontent.com/*"
-  ],
   "oauth2": {
     "client_id": "",
     "scopes": [
@@ -23,6 +18,12 @@
       "https://www.googleapis.com/auth/gmail.labels"
     ]
   },
+
+  "permissions": ["storage", "activeTab", "contextMenus", "identity", "sidePanel"],
+  "host_permissions": [
+    "https://mail.google.com/*",
+    "https://*.googleusercontent.com/*"
+  ],
   "background": {
     "service_worker": "background.js"
   },
