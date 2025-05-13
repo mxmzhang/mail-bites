@@ -30,17 +30,21 @@ Note that to run this extension before this is published on Chrome Web Store, yo
 2. Click "Create Credentials" and select "OAuth client ID"
 3. Select "Chrome Extension" as the application type
 4. Enter a name for your OAuth client
-5. For "Application ID", enter the extension ID (you'll get this after loading the extension in Chrome for the first time)
-6. Add `https://mail.google.com/` to the JavaScript origins
-7. Click "Create"
-8. Note your Client ID - you'll need it in the next step
-9. Go to "Audience" and add your email in Test users
+5. For "Application ID", enter the extension ID (you'll get this after loading the extension in Chrome for the first time but for now enter an id of a different chrome extension found under chrome://extensions/)
+8. Click "Create"
+9. Note your Client ID - you'll need it in the next step
+10. Go to "Audience" and add your email in Test users
+11. In the sidebar, navigate to "APIs & Services" > "Library"
+12. Search for the Gemini API, and enable it.
+13. Then in the sidebar, navigate to "APIs & Services" > "Credentials" and take not of your API key.
 
 ### 3. Update the Extension Manifest
 
-1. Open `public/manifest.json`
-2. Replace `YOUR_CLIENT_ID.apps.googleusercontent.com` with your actual client ID from the previous step
-3. Replace `GEMINI_API_KEY` in `background.js` with your API key
+1. Clone the repository and open it in a code editor such as Visual Studio Code.
+2. Open `public/manifest.json`
+3. Replace `YOUR_CLIENT_ID.apps.googleusercontent.com` (or where you see "client_id") with your actual client ID from the previous step
+4. Replace `GEMINI_API_KEY` in `background.js` with your API key from the previous step (or find ```const GEMINI_API_KEY``` and add your key after the equal sign)
+5. Find ```const clientId``` and add your client ID after the equal sign in `background.js`
 
 ### 4. Install Dependencies and Build the Extension
 
@@ -58,7 +62,7 @@ npm run build
 2. Enable "Developer mode" (toggle in the top-right corner)
 3. Click "Load unpacked" and select the `dist` folder from your project
 4. Note the extension ID that appears under the extension name - you'll need to add this to your OAuth client configuration
-5. Go back to the Google Cloud Console, update your OAuth client with this extension ID
+5. Go back to the Google Cloud Console, update your OAuth client with this extension ID (click the edit button and change the ID)
 
 ### 6. Use the Extension
 
